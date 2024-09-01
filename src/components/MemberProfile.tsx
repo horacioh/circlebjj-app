@@ -42,7 +42,10 @@ const MemberProfile: React.FC = () => {
       </div>
       <div className="mb-4">
         <h3 className="text-xl font-semibold mb-2">My QR Code</h3>
-        <QRCodeSVG value={member.id} size={200} />
+        <div className='mx-auto max-w-sm flex justify-center items-center'>
+        <QRCodeSVG value={member.id} size={220} />
+        </div>
+        
       </div>
       <h3 className="text-xl font-semibold mb-2">Attendance History</h3>
       <ul className="list-disc pl-5 mb-4">

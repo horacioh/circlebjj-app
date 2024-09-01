@@ -29,7 +29,7 @@ const MainNav: React.FC<MainNavProps> = ({ isLoggedIn, isAdmin, setIsLoggedIn, s
     return location.pathname === path ? 'text-blue-700 font-bold' : 'text-blue-500'
   }
 
-  return (
+  return isLoggedIn ? (
     <nav className="mb-4">
       <ul className="flex justify-center items-center space-x-4">
         {isAdmin ? (
@@ -53,7 +53,7 @@ const MainNav: React.FC<MainNavProps> = ({ isLoggedIn, isAdmin, setIsLoggedIn, s
         </li>
       </ul>
     </nav>
-  )
+  ) : null
 }
 
 export default MainNav

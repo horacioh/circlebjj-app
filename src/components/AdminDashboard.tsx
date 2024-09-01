@@ -1,16 +1,64 @@
-import React, { useCallback, useState } from "react";
-
+import React, { useCallback, useState, useEffect } from "react";
 import { QrReader } from "@cmdnio/react-qr-reader";
 import { useNavigate } from "react-router-dom";
 import { collections, pb } from "../pocketbase";
 
+interface DashboardStats {
+  totalUsers: number;
+  attendancesToday: number;
+  newUsersThisMonth: number;
+}
+
+interface RecentAttendance {
+  id: string;
+  created: string;
+  user: string;
+  expand?: {
+    user: {
+      first_name: string;
+      last_name: string;
+    };
+  };
+}
+
 const AdminDashboard: React.FC = () => {
   const navigate = useNavigate();
   const [showScanner, setShowScanner] = useState(false);
+  const [stats, setStats] = useState<DashboardStats | null>(null);
+  const [recentAttendances, setRecentAttendances] = useState<RecentAttendance[]>([]);
+
+  const fetchDashboardData = useCallback(async () => {
+    try {
+      const usersCount = await pb.collection(collections.users).getList(1, 1);
+      const today = new Date().toISOString().split('T')[0];
+      const attendancesToday = await pb.collection(collections.attendances).getList(1, 1, { filter: `created>="${today}"` });
+      const firstDayOfMonth = new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString();
+      const newUsersThisMonth = await pb.collection(collections.users).getList(1, 1, { filter: `created >= "${firstDayOfMonth}"` });
+      
+      setStats({
+        totalUsers: usersCount.totalItems,
+        attendancesToday: attendancesToday.totalItems,
+        newUsersThisMonth: newUsersThisMonth.totalItems,
+      });
+
+      const recentAttendances = await pb.collection(collections.attendances).getList<RecentAttendance>(1, 5, {
+        sort: '-created',
+        expand: 'user',
+      });
+      setRecentAttendances(recentAttendances.items);
+    } catch (error) {
+      console.error("Error fetching dashboard data:", error);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchDashboardData();
+  }, [fetchDashboardData]);
 
   const toggleScanner = () => {
     setShowScanner(true);
   };
+
   const handleScan = useCallback(
     (userId: string) => {
       if (showScanner) {
@@ -19,47 +67,84 @@ const AdminDashboard: React.FC = () => {
           .then((res) => {
             console.log("ATTENDANCE CREATED", res);
             setShowScanner(false);
-            // TODO: remove this hack when the reader is fixed
-            window.location.reload();
+            fetchDashboardData(); // Refresh dashboard data after new attendance
           });
       }
     },
-    [showScanner]
+    [showScanner, fetchDashboardData]
   );
 
   return (
-    <div>
+    <div className="space-y-6">
       <h2 className="text-2xl font-bold mb-4">Admin Dashboard</h2>
-      <button
-        onClick={toggleScanner}
-        className="bg-blue-500 text-white px-4 py-2 rounded mr-2"
-      >
-        Scan User QR Code
-      </button>
-      <button
-        onClick={() => navigate("/admin/members")}
-        className="bg-green-500 text-white px-4 py-2 rounded mr-2"
-      >
-        View Users List
-      </button>
-      {showScanner ? (
-        <div className="mt-4">
-          <QrReader
-            onResult={(result, error) => {
-              if (result?.getText()) {
-                const userId = result.getText();
-                handleScan(userId);
-              }
-
-              if (error) {
-                console.error(error);
-              }
-            }}
-            // @ts-expect-error this prop is not defined in the component
-            style={{ width: "100%" }}
-          />
+      
+      {/* Summary Statistics */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="bg-blue-100 p-4 rounded-lg">
+          <h3 className="font-semibold text-lg">Total Users</h3>
+          <p className="text-3xl font-bold">{stats?.totalUsers || 0}</p>
         </div>
-      ) : null}
+        <div className="bg-green-100 p-4 rounded-lg">
+          <h3 className="font-semibold text-lg">Attendances Today</h3>
+          <p className="text-3xl font-bold">{stats?.attendancesToday || 0}</p>
+        </div>
+        <div className="bg-yellow-100 p-4 rounded-lg">
+          <h3 className="font-semibold text-lg">New Users This Month</h3>
+          <p className="text-3xl font-bold">{stats?.newUsersThisMonth || 0}</p>
+        </div>
+      </div>
+
+      {/* QR Scanner */}
+      <div className="bg-white p-4 rounded-lg shadow">
+        <h3 className="font-semibold text-lg mb-2">Attendance Scanner</h3>
+        <button
+          onClick={toggleScanner}
+          className="bg-blue-500 text-white px-4 py-2 rounded mr-2"
+        >
+          Scan User QR Code
+        </button>
+        {showScanner && (
+          <div className="mt-4">
+            <QrReader
+              onResult={(result, error) => {
+                if (result?.getText()) {
+                  const userId = result.getText();
+                  handleScan(userId);
+                }
+                if (error) {
+                  console.error(error);
+                }
+              }}
+              style={{ width: "100%" }}
+            />
+          </div>
+        )}
+      </div>
+
+      {/* Recent Attendances */}
+      <div className="bg-white p-4 rounded-lg shadow">
+        <h3 className="font-semibold text-lg mb-2">Recent Attendances</h3>
+        <ul className="space-y-2">
+          {recentAttendances.map((attendance) => (
+            <li key={attendance.id} className="flex justify-between items-center">
+              <span>{attendance.expand?.user ? `${attendance.expand.user.first_name} ${attendance.expand.user.last_name}` : 'Unknown User'}</span>
+              <span className="text-gray-500">{new Date(attendance.created).toLocaleString()}</span>
+            </li>
+          ))}
+        </ul>
+        <button
+          onClick={() => navigate('/admin/attendance')}
+          className="mt-4 bg-gray-200 text-gray-800 px-4 py-2 rounded"
+        >
+          View All Attendances
+        </button>
+      </div>
+
+      {/* Placeholder for Classes Section */}
+      <div className="bg-white p-4 rounded-lg shadow">
+        <h3 className="font-semibold text-lg mb-2">Classes</h3>
+        <p className="text-gray-500">Class management coming soon...</p>
+      </div>
     </div>
   );
 };
