@@ -18,11 +18,10 @@ const MainNav: React.FC<MainNavProps> = ({ isLoggedIn, isAdmin, setIsLoggedIn, s
   }
 
   const handleLogout = () => {
-    const wasAdmin = isAdmin
     pb.authStore.clear()
     setIsLoggedIn(false)
     setIsAdmin(false)
-    navigate(wasAdmin ? '/admin' : '/login')
+    navigate('/login')
   }
 
   const isActive = (path: string) => {
@@ -34,9 +33,9 @@ const MainNav: React.FC<MainNavProps> = ({ isLoggedIn, isAdmin, setIsLoggedIn, s
       <ul className="flex justify-center items-center space-x-4">
         {isAdmin ? (
           <>
-            <li><Link to="/admin/dashboard" className={`hover:underline ${isActive('/admin/dashboard')}`}>Dashboard</Link></li>
-            <li><Link to="/admin/members" className={`hover:underline ${isActive('/admin/members')}`}>Members</Link></li>
-            <li><Link to="/admin/attendance" className={`hover:underline ${isActive('/admin/attendance')}`}>Attendance</Link></li>
+            <li><Link to="/dashboard" className={`hover:underline ${isActive('/dashboard')}`}>Dashboard</Link></li>
+            <li><Link to="/members" className={`hover:underline ${isActive('/members')}`}>Members</Link></li>
+            <li><Link to="/attendance" className={`hover:underline ${isActive('/attendance')}`}>Attendance</Link></li>
           </>
         ) : (
           <>

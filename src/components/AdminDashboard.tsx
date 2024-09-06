@@ -1,7 +1,8 @@
 import React, { useCallback, useState, useEffect } from "react";
-import { QrReader } from "@cmdnio/react-qr-reader";
+
 import { useNavigate } from "react-router-dom";
 import { collections, pb } from "../pocketbase";
+import { Scanner } from "./Scanner";
 
 interface DashboardStats {
   totalUsers: number;
@@ -51,6 +52,18 @@ const AdminDashboard: React.FC = () => {
     }
   }, []);
 
+  async function handleUserScan(userId: string) {
+    try {
+      const attendance = await pb.collection(collections.attendances).create({
+        user: userId,
+      });
+      // setRecentAttendances([attendance, ...recentAttendances]);
+      console.log("Attendance recorded:", attendance);
+    } catch (error) {
+      console.error("Error recording attendance:", error);
+    }
+  }
+
   useEffect(() => {
     fetchDashboardData();
   }, [fetchDashboardData]);
@@ -59,23 +72,10 @@ const AdminDashboard: React.FC = () => {
     setShowScanner(true);
   };
 
-  const handleScan = useCallback(
-    (userId: string) => {
-      if (showScanner) {
-        pb.collection(collections.attendances)
-          .create({ user: userId })
-          .then((res) => {
-            console.log("ATTENDANCE CREATED", res);
-            setShowScanner(false);
-            fetchDashboardData(); // Refresh dashboard data after new attendance
-          });
-      }
-    },
-    [showScanner, fetchDashboardData]
-  );
+  
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 max-w-4xl mx-auto mt-8"> 
       <h2 className="text-2xl font-bold mb-4">Admin Dashboard</h2>
       
       {/* Summary Statistics */}
@@ -104,20 +104,12 @@ const AdminDashboard: React.FC = () => {
           Scan User QR Code
         </button>
         {showScanner && (
-          <div className="mt-4">
-            <QrReader
-              onResult={(result, error) => {
-                if (result?.getText()) {
-                  const userId = result.getText();
-                  handleScan(userId);
-                }
-                if (error) {
-                  console.error(error);
-                }
-              }}
-              style={{ width: "100%" }}
-            />
-          </div>
+          <Scanner onScan={(userId) => {
+            if (userId) {
+              handleUserScan(userId);
+              setShowScanner(false);
+            }
+          }} />
         )}
       </div>
 
@@ -133,7 +125,7 @@ const AdminDashboard: React.FC = () => {
           ))}
         </ul>
         <button
-          onClick={() => navigate('/admin/attendance')}
+          onClick={() => navigate('/attendance')}
           className="mt-4 bg-gray-200 text-gray-800 px-4 py-2 rounded"
         >
           View All Attendances

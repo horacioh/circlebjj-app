@@ -1,22 +1,39 @@
-import React, { useState } from 'react';
-import { collections, pb } from '../pocketbase';
-import { useNavigate } from 'react-router-dom';
+import React, { useMemo, useState } from "react";
+import { collections, getCurrentUser, pb } from "../pocketbase";
+import { useNavigate, redirect } from "react-router-dom";
 
 const Login: React.FC = () => {
   const navigate = useNavigate();
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [error, setError] = useState('');
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
+
+  useMemo(() => {
+    const currentUser = getCurrentUser();
+
+    if (currentUser) {
+      const isAdmin = currentUser?.role?.length
+        ? currentUser.role.includes("admin")
+        : false;
+      return redirect(isAdmin ? "/dashboard" : "/profile");
+    }
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError('');
+    setError("");
     try {
-      await pb.collection(collections.users).authWithPassword(email, password);
-      navigate('/profile');
+      const user = await pb
+        .collection(collections.users)
+        .authWithPassword(email, password);
+      navigate(
+        user.record.role?.length && user.record.role.includes("admin")
+          ? "/dashboard"
+          : "/profile"
+      );
     } catch (error) {
-      console.error('Error logging in:', error);
-      setError('Invalid email or password');
+      console.error("Error logging in:", error);
+      setError("Invalid email or password");
     }
   };
 
@@ -26,7 +43,9 @@ const Login: React.FC = () => {
       {error && <p className="text-red-500 mb-4">{error}</p>}
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
-          <label htmlFor="email" className="block mb-1">Email</label>
+          <label htmlFor="email" className="block mb-1">
+            Email
+          </label>
           <input
             id="email"
             type="email"
@@ -37,7 +56,9 @@ const Login: React.FC = () => {
           />
         </div>
         <div>
-          <label htmlFor="password" className="block mb-1">Password</label>
+          <label htmlFor="password" className="block mb-1">
+            Password
+          </label>
           <input
             id="password"
             type="password"
@@ -47,7 +68,10 @@ const Login: React.FC = () => {
             required
           />
         </div>
-        <button type="submit" className="w-full p-2 bg-blue-500 text-white rounded hover:bg-blue-600">
+        <button
+          type="submit"
+          className="w-full p-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+        >
           Login
         </button>
       </form>

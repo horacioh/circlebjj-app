@@ -12,7 +12,9 @@
   "dependencies": {
     "@cmdnio/react-qr-reader": "^3.0.2",
     "@tailwindcss/forms": "^0.5.x",
+    "lodash": "^4.17.21",
     "pocketbase": "^0.x.x",
+    "qr-scanner": "^1.4.2",
     "qrcode.react": "^3.1.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",

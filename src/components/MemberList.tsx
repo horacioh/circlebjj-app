@@ -1,63 +1,20 @@
-import React, { useEffect, useState } from "react";
-import { collections, pb } from "../pocketbase";
-import { Attendance, User } from "../types";
+import React, { useState } from "react";
+import { useUsers } from "../models";
+import { User } from "../types";
 
 type Member = User & {attendanceCount: number}
 
 const MemberList: React.FC = () => {
-  const [members, setMembers] = useState<Array<Member>>([]);
+  const {users, loading}  = useUsers({pageSize: 200})
   const [searchTerm, setSearchTerm] = useState("");
-  const [loading, setLoading] = useState(true);
+  // const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    const fetchMembersAndAttendance = async () => {
-      try {
-        const resultList = await pb
-          .collection(collections.users)
-          .getList<User>(1, 100, {
-            sort: "first_name",
-          });
-
-        console.log(
-          `== ~ fetchMembersAndAttendance ~ resultList:`,
-          resultList.items
-        );
-
-        const attendancesResult = await pb.collection(collections.attendances).getFullList<Attendance>({
-            sort: '-created',
-          });
-
-        const membersWithAttendance = await Promise.all(
-          resultList.items.map(async (member) => {
-            
-
-            
-            return {
-              ...member,
-              attendanceCount: attendancesResult.filter(a => a.user == member.id).length,
-            };
-          })
-        );
-
-        setMembers(membersWithAttendance);
-      } catch (error) {
-        console.error("Error fetching members and attendance:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchMembersAndAttendance();
-  }, []);
-
-  const filteredMembers = members.filter(
+  const filteredMembers = users.filter(
     (member) =>
       member.first_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       member.last_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       member.email.toLowerCase().includes(searchTerm.toLowerCase())
   );
-
-  console.log(`== ~ members:`, members);
 
   if (loading) {
     return <div>Loading...</div>;

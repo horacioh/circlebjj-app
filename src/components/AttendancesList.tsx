@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { collections, pb } from '../pocketbase';
+import { useAttendances } from '../models';
 
 interface Attendance {
   id: string;
@@ -23,57 +24,31 @@ interface User {
 }
 
 const AttendancesList: React.FC = () => {
-  const [attendances, setAttendances] = useState<Attendance[]>([]);
-  const [users, setUsers] = useState<User[]>([]);
+  const {attendances, loading} = useAttendances({});
+  
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
-  const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const usersResult = await pb.collection(collections.users).getList<User>(1, 100, {
-          sort: 'first_name',
-        });
-        setUsers(usersResult.items);
+  // const filteredUsers = users.filter(user => 
+  //   user.first_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+  //   user.last_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+  //   user.email.toLowerCase().includes(searchTerm.toLowerCase())
+  // );
 
-        const attendancesResult = await pb.collection(collections.attendances).getList<Attendance>(1, 100, {
-          sort: '-created',
-          expand: 'user',
-        });
-        setAttendances(attendancesResult.items);
-      } catch (error) {
-        console.error('Error fetching data:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchData();
-  }, []);
-
-  const filteredUsers = users.filter(user => 
-    user.first_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    user.last_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    user.email.toLowerCase().includes(searchTerm.toLowerCase())
-  );
-
-  const filteredAttendances = selectedUser
+  // const filteredAttendances = selectedUser
 
     
-    ? attendances.filter(attendance => attendance.user === selectedUser.id)
-    : attendances;
+  //   ? attendances.filter(attendance => attendance.user === selectedUser.id)
+  //   : attendances;
     
-  const handleUserSelect = (user: User) => {
-    setSelectedUser(user);
-    setSearchTerm(`${user.first_name} ${user.last_name}`);
-  };
+  // const handleUserSelect = (user: User) => {
+  //   setSelectedUser(user);
+  //   setSearchTerm(`${user.first_name} ${user.last_name}`);
+  // };
 
   if (loading) {
     return <div>Loading...</div>;
   }
-
-  console.log(`== ~ filteredAttendances:`, filteredAttendances)
 
   return (
     <div className="container mx-auto p-4">
@@ -91,13 +66,13 @@ const AttendancesList: React.FC = () => {
         />
         {searchTerm && !selectedUser && (
           <ul className="absolute z-10 w-full bg-white border rounded mt-1 max-h-60 overflow-auto">
-            {filteredUsers.map((user) => (
+            {attendances.map((attendance) => (
               <li
-                key={user.id}
-                onClick={() => handleUserSelect(user)}
+                key={attendance.id}
+                // onClick={() => handleUserSelect(user)}
                 className="p-2 hover:bg-gray-100 cursor-pointer"
               >
-                {user.first_name} {user.last_name} ({user.email})
+                {attendance.expand?.user.first_name} {attendance.expand?.user.last_name} ({attendance.expand?.user.email})
               </li>
             ))}
           </ul>
@@ -111,7 +86,7 @@ const AttendancesList: React.FC = () => {
           </tr>
         </thead>
         <tbody>
-          {filteredAttendances.map((attendance) => (
+          {attendances.map((attendance) => (
             <tr key={attendance.id}>
               <td className="border p-2">{new Date(attendance.created).toLocaleString()}</td>
               <td className="border p-2">

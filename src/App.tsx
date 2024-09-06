@@ -16,6 +16,7 @@ function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(false)
   const [isAdmin, setIsAdmin] = useState(false)
 
+  
   useEffect(() => {
     const checkAuth = () => {
       const isAuth = pb.authStore.isValid
@@ -45,29 +46,29 @@ function App() {
           <Route path="/signup" element={<SignUp />} />
           <Route path="/login" element={<Login />} />
           <Route 
-            path="/profile" 
-            element={isLoggedIn ? <MemberProfile /> : <Navigate to="/login" />} 
-          />
-          <Route 
             path="/admin" 
-            element={isAdmin ? <Navigate to="/admin/dashboard" /> : <AdminLogin />} 
+            element={<AdminLogin />} 
           />
           <Route 
-            path="/admin/dashboard" 
-            element={isAdmin ? <AdminDashboard /> : <Navigate to="/admin" />} 
+            path="/profile" 
+            element={<MemberProfile />} 
           />
           <Route 
-            path="/admin/members" 
-            element={isAdmin ? <MemberList /> : <Navigate to="/admin" />} 
+            path="/dashboard" 
+            element={<AdminDashboard />} 
           />
           <Route 
-            path="/admin/attendance" 
-            element={isAdmin ? <AttendancesList /> : <Navigate to="/admin" />} 
+            path="/members" 
+            element={<MemberList />} 
           />
           <Route 
+            path="/attendance" 
+            element={<AttendancesList />} 
+          />
+          {/* <Route 
             path="/" 
             element={isLoggedIn ? <h2>Welcome to CircleBJJ</h2> : <Navigate to="/login" />} 
-          />
+          /> */}
         </Routes>
       </div>
     </Router>
