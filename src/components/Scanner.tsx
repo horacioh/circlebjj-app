@@ -1,18 +1,16 @@
-import { throttle } from "lodash"; // Add this import at the top of the file
 import QrScanner from "qr-scanner";
-import { collections } from "../pocketbase";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 export function Scanner({ onScan }: { onScan: (userId: string) => void }) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const qrScannerRef = useRef<QrScanner | null>(null);
   const qrBoxEl = useRef<HTMLDivElement>(null);
-  const [qrOn, setQrOn] = useState(false);
+  const [, setQrOn] = useState(false);
 
   function onScanSuccess(result: QrScanner.ScanResult) {
     // ✅ Handle success.
     // 😎 You can do whatever you want with the scanned result.
-    onScan(result.data)
+    onScan(result.data);
   }
 
   // Fail
@@ -22,7 +20,7 @@ export function Scanner({ onScan }: { onScan: (userId: string) => void }) {
   };
 
   useEffect(() => {
-    const vRef = videoRef.current
+    const vRef = videoRef.current;
     if (videoRef?.current && !qrScannerRef.current) {
       // 👉 Instantiate the QR Scanner
       qrScannerRef.current = new QrScanner(videoRef?.current, onScanSuccess, {
@@ -35,7 +33,7 @@ export function Scanner({ onScan }: { onScan: (userId: string) => void }) {
         highlightCodeOutline: true,
         // 📦 A custom div which will pair with "highlightScanRegion" option above 👆. This gives us full control over our scan region.
         overlay: qrBoxEl?.current || undefined,
-        maxScansPerSecond: 1
+        maxScansPerSecond: 1,
       });
 
       // 🚀 Start QR Scanner
@@ -65,9 +63,9 @@ export function Scanner({ onScan }: { onScan: (userId: string) => void }) {
   // }, [qrOn]);
 
   return (
-    <div className="mt-4">
+    <div className="mt-4 fixed top-0 left-0 w-full h-full p-4 bg-slate-900">
       {/* QR */}
-      <video ref={videoRef}></video>
+      <video ref={videoRef} className="w-full h-full object-cover"></video>
       <div ref={qrBoxEl} className="qr-box" />
     </div>
   );

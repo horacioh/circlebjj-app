@@ -10,6 +10,8 @@ interface MainNavProps {
 }
 
 const MainNav: React.FC<MainNavProps> = ({ isLoggedIn, isAdmin, setIsLoggedIn, setIsAdmin }) => {
+
+  console.log(`== ~ isLoggedIn, isAdmin, setIsLoggedIn, setIsAdmin:`, isLoggedIn, isAdmin)
   const navigate = useNavigate()
   const location = useLocation()
 
@@ -36,6 +38,7 @@ const MainNav: React.FC<MainNavProps> = ({ isLoggedIn, isAdmin, setIsLoggedIn, s
             <li><Link to="/dashboard" className={`hover:underline ${isActive('/dashboard')}`}>Dashboard</Link></li>
             <li><Link to="/members" className={`hover:underline ${isActive('/members')}`}>Members</Link></li>
             <li><Link to="/attendance" className={`hover:underline ${isActive('/attendance')}`}>Attendance</Link></li>
+            <li><Link to="/profile" className={`hover:underline ${isActive('/profile')}`}>Profile</Link></li>
           </>
         ) : (
           <>

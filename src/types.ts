@@ -9,16 +9,16 @@ export interface User extends Collection {
     first_name: string
     last_name: string
     email: string
-    emailVisibility: string
     verified : string
     belt?: string
     grade?: string
+    attendanceCount?: number
+    avatar?: string
 }
 
 export interface Attendance extends Collection {
     user: string
-}
-
-export interface AttendanceExpanded extends Collection {
-    user: User
+    expand?: {
+        user: User
+    }
 }

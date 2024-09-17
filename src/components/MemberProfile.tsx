@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react'
-import { pb, getCurrentUser, collections } from '../pocketbase'
+import { pb, getCurrentUser, collections, IMAGE_URL } from '../pocketbase'
 import { useNavigate } from 'react-router-dom'
 import { QRCodeSVG } from 'qrcode.react'
 import { Attendance, User } from '../types'
@@ -37,6 +37,7 @@ const MemberProfile: React.FC = () => {
     <div>
       <h2 className="text-2xl font-bold mb-4">My Profile</h2>
       <div className="mb-4">
+        <img src={`${IMAGE_URL}/users/${member.id}/${member.avatar}`} alt="Avatar" className="w-32 h-32 rounded-full mx-auto mb-4" />
         <p>Name: {member.first_name}</p>
         <p>Email: {member.email}</p>
       </div>

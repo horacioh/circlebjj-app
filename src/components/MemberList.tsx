@@ -2,12 +2,15 @@ import React, { useState } from "react";
 import { useUsers } from "../models";
 import { User } from "../types";
 
-type Member = User & {attendanceCount: number}
-
 const MemberList: React.FC = () => {
-  const {users, loading}  = useUsers({pageSize: 200})
+  const { data: users = [], isLoading } = useUsers({ pageSize: 200 });
+
+  console.log(`== ~ users:`, users)
   const [searchTerm, setSearchTerm] = useState("");
-  // const [loading, setLoading] = useState(true);
+
+  if (isLoading) {
+    return <div>Loading...</div>;
+  }
 
   const filteredMembers = users.filter(
     (member) =>
@@ -15,10 +18,6 @@ const MemberList: React.FC = () => {
       member.last_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       member.email.toLowerCase().includes(searchTerm.toLowerCase())
   );
-
-  if (loading) {
-    return <div>Loading...</div>;
-  }
 
   return (
     <div className="container mx-auto p-4">
@@ -32,34 +31,23 @@ const MemberList: React.FC = () => {
           className="w-full p-2 border rounded"
         />
       </div>
-      <table className="w-full border-collapse border">
-        <thead>
-          <tr className="bg-gray-200">
-            <th className="border p-2">First Name</th>
-            <th className="border p-2">Last Name</th>
-            <th className="border p-2">Email</th>
-            <th className="border p-2">Attendance Count</th>
-          </tr>
-        </thead>
-        <tbody>
-          {filteredMembers.map((member) => (
-            <MemberItem member={member} />
-          ))}
-        </tbody>
-      </table>
+      <div className="grid grid-cols-1 gap-4 lg:gap-1">
+        {filteredMembers.map((member) => (
+          <MemberItem key={member.id} member={member} />
+        ))}
+      </div>
     </div>
   );
 };
 
 export default MemberList;
 
-function MemberItem({ member }: { member: Member }) {
+function MemberItem({ member }: { member: User }) {
   return (
-    <tr key={member.id}>
-      <td className="border p-2">{member.first_name}</td>
-      <td className="border p-2">{member.last_name}</td>
-      <td className="border p-2">{member.email}</td>
-      <td className="border p-2">{member.attendanceCount}</td>
-    </tr>
+    <div className="border p-4 rounded-lg shadow">
+      <h3 className="font-semibold">{member.first_name} {member.last_name}</h3>
+      <p>{member.email}</p>
+      <p>Attendance this month: {member.attendanceCount}</p>
+    </div>
   );
 }

@@ -1,16 +1,17 @@
 import { useEffect, useState } from 'react'
-import { Route, BrowserRouter as Router, Routes, Navigate } from 'react-router-dom'
+import { Navigate, Route, BrowserRouter as Router, Routes } from 'react-router-dom'
 import './App.css'
-import { pb } from './pocketbase'
-
-import AdminLogin from './components/AdminLogin'
+import { client, pb } from './pocketbase'
+import { ReactQueryDevtools } from '@tanstack/react-query-devtools'
+import { QueryClientProvider } from '@tanstack/react-query'
 import AdminDashboard from './components/AdminDashboard'
-import MemberList from './components/MemberList'
+import AdminLogin from './components/AdminLogin'
 import AttendancesList from './components/AttendancesList'
-import MemberProfile from './components/MemberProfile'
-import SignUp from './components/SignUp'
 import Login from './components/Login'
 import MainNav from './components/MainNav'
+import MemberList from './components/MemberList'
+import MemberProfile from './components/MemberProfile'
+import SignUp from './components/SignUp'
 
 function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(false)
@@ -20,8 +21,9 @@ function App() {
   useEffect(() => {
     const checkAuth = () => {
       const isAuth = pb.authStore.isValid
+
       setIsLoggedIn(isAuth)
-      setIsAdmin(pb.authStore.isAdmin)
+      setIsAdmin(pb.authStore.isAdmin || pb.authStore.model?.role.includes('admin'))
     }
 
     checkAuth()
@@ -33,6 +35,7 @@ function App() {
   }, [])
 
   return (
+    <QueryClientProvider client={client}>
     <Router>
       <div className="container mx-auto p-4">
         <h1 className="text-3xl font-bold mb-4 text-center">CircleBJJ app</h1>
@@ -44,34 +47,36 @@ function App() {
         />
         <Routes>
           <Route path="/signup" element={<SignUp />} />
-          <Route path="/login" element={<Login />} />
+          <Route path="/login" element={isLoggedIn ? isAdmin ? <Navigate to="/dashboard" /> : <Navigate to="/profile" /> : <Login />} />
           <Route 
             path="/admin" 
             element={<AdminLogin />} 
           />
           <Route 
             path="/profile" 
-            element={<MemberProfile />} 
+            element={isLoggedIn ? <MemberProfile /> : <Navigate to="/login" />} 
           />
           <Route 
             path="/dashboard" 
-            element={<AdminDashboard />} 
+            element={isLoggedIn && isAdmin ? <AdminDashboard /> : <Navigate to="/admin" />} 
           />
           <Route 
             path="/members" 
-            element={<MemberList />} 
+            element={isLoggedIn ? <MemberList /> : <Navigate to="/login" />} 
           />
           <Route 
             path="/attendance" 
-            element={<AttendancesList />} 
+            element={isLoggedIn ? <AttendancesList /> : <Navigate to="/login" />} 
           />
-          {/* <Route 
+          <Route 
             path="/" 
-            element={isLoggedIn ? <h2>Welcome to CircleBJJ</h2> : <Navigate to="/login" />} 
-          /> */}
+            element={isLoggedIn ? <Navigate to={isAdmin ? "/dashboard" : "/profile"} />: <Navigate to="/login" />} 
+          />
         </Routes>
       </div>
     </Router>
+    <ReactQueryDevtools initialIsOpen={false} />
+    </QueryClientProvider>
   )
 }
 

@@ -1,85 +1,109 @@
-import React, { useCallback, useState, useEffect } from "react";
-
+import React, { useState } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
 import { collections, pb } from "../pocketbase";
 import { Scanner } from "./Scanner";
-
-interface DashboardStats {
-  totalUsers: number;
-  attendancesToday: number;
-  newUsersThisMonth: number;
-}
-
-interface RecentAttendance {
-  id: string;
-  created: string;
-  user: string;
-  expand?: {
-    user: {
-      first_name: string;
-      last_name: string;
-    };
-  };
-}
+import { queryKeys } from "../querykeys";
+import { RecordModel } from "pocketbase";
 
 const AdminDashboard: React.FC = () => {
   const navigate = useNavigate();
   const [showScanner, setShowScanner] = useState(false);
-  const [stats, setStats] = useState<DashboardStats | null>(null);
-  const [recentAttendances, setRecentAttendances] = useState<RecentAttendance[]>([]);
+  const client = useQueryClient();
 
-  const fetchDashboardData = useCallback(async () => {
-    try {
-      const usersCount = await pb.collection(collections.users).getList(1, 1);
-      const today = new Date().toISOString().split('T')[0];
-      const attendancesToday = await pb.collection(collections.attendances).getList(1, 1, { filter: `created>="${today}"` });
-      const firstDayOfMonth = new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString();
-      const newUsersThisMonth = await pb.collection(collections.users).getList(1, 1, { filter: `created >= "${firstDayOfMonth}"` });
-      
-      setStats({
+  const { data: stats, isLoading: loadingStats } = useQuery({
+    queryKey: [queryKeys.STATS, queryKeys.ATTENDANCE_LIST, queryKeys.USER_LIST],
+    queryFn: async () => {
+      const usersCount = await pb.collection(collections.users).getList(1, 1, {
+        role: pb.authStore.model?.role.includes("admin")
+          ? "admin"
+          : pb.authStore.model?.role.includes("coach")
+          ? "coach"
+          : "",
+      });
+      const today = new Date().toISOString().split("T")[0];
+      const attendancesToday = await pb
+        .collection(collections.attendances)
+        .getList(1, 1, {
+          filter: `created>="${today}"`,
+        });
+      const firstDayOfMonth = new Date(
+        new Date().getFullYear(),
+        new Date().getMonth(),
+        1
+      ).toISOString();
+      const newUsersThisMonth = await pb
+        .collection(collections.users)
+        .getList(1, 1, {
+          filter: `created >= "${firstDayOfMonth}"`,
+        });
+
+      return {
         totalUsers: usersCount.totalItems,
         attendancesToday: attendancesToday.totalItems,
         newUsersThisMonth: newUsersThisMonth.totalItems,
-      });
+      };
+    },
+  });
 
-      const recentAttendances = await pb.collection(collections.attendances).getList<RecentAttendance>(1, 5, {
-        sort: '-created',
-        expand: 'user',
+  const { data: recentAttendances } = useQuery({
+    queryKey: [queryKeys.ATTENDANCE_LIST, "recent"],
+    queryFn: async () => {
+      return await pb.collection(collections.attendances).getList(1, 5, {
+        sort: "-created",
+        expand: "user",
       });
-      setRecentAttendances(recentAttendances.items);
-    } catch (error) {
-      console.error("Error fetching dashboard data:", error);
-    }
-  }, []);
+    },
+  });
 
   async function handleUserScan(userId: string) {
     try {
       const attendance = await pb.collection(collections.attendances).create({
         user: userId,
       });
-      // setRecentAttendances([attendance, ...recentAttendances]);
       console.log("Attendance recorded:", attendance);
+      client.invalidateQueries({
+        queryKey: [queryKeys.ATTENDANCE_LIST, queryKeys.STATS],
+      });
+      client.invalidateQueries({
+        queryKey: [
+          queryKeys.STATS,
+          queryKeys.ATTENDANCE_LIST,
+          queryKeys.USER_LIST,
+        ],
+      });
+      alert("Attendance recorded successfully");
     } catch (error) {
       console.error("Error recording attendance:", error);
     }
   }
 
-  useEffect(() => {
-    fetchDashboardData();
-  }, [fetchDashboardData]);
-
-  const toggleScanner = () => {
-    setShowScanner(true);
-  };
-
-  
+  if (loadingStats) return <div>Loading...</div>;
 
   return (
-    <div className="space-y-6 max-w-4xl mx-auto mt-8"> 
+    <div className="space-y-6 max-w-4xl mx-auto mt-8">
       <h2 className="text-2xl font-bold mb-4">Admin Dashboard</h2>
-      
+
+      {/* QR Scanner */}
+      <button
+        onClick={() => setShowScanner(true)}
+        className="bg-blue-500 text-white px-4 py-2 rounded mr-2"
+      >
+        Scan User QR Code
+      </button>
+      {showScanner && (
+        <Scanner
+          onScan={(userId) => {
+            if (userId) {
+              setShowScanner(false);
+              handleUserScan(userId);
+            }
+          }}
+        />
+      )}
+
       {/* Summary Statistics */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 gap-4 lg:gap-1">
         <div className="bg-blue-100 p-4 rounded-lg">
           <h3 className="font-semibold text-lg">Total Users</h3>
           <p className="text-3xl font-bold">{stats?.totalUsers || 0}</p>
@@ -94,41 +118,21 @@ const AdminDashboard: React.FC = () => {
         </div>
       </div>
 
-      {/* QR Scanner */}
-      <div className="bg-white p-4 rounded-lg shadow">
-        <h3 className="font-semibold text-lg mb-2">Attendance Scanner</h3>
-        <button
-          onClick={toggleScanner}
-          className="bg-blue-500 text-white px-4 py-2 rounded mr-2"
-        >
-          Scan User QR Code
-        </button>
-        {showScanner && (
-          <Scanner onScan={(userId) => {
-            if (userId) {
-              handleUserScan(userId);
-              setShowScanner(false);
-            }
-          }} />
-        )}
-      </div>
-
       {/* Recent Attendances */}
       <div className="bg-white p-4 rounded-lg shadow">
         <h3 className="font-semibold text-lg mb-2">Recent Attendances</h3>
-        <ul className="space-y-2">
-          {recentAttendances.map((attendance) => (
-            <li key={attendance.id} className="flex justify-between items-center">
-              <span>{attendance.expand?.user ? `${attendance.expand.user.first_name} ${attendance.expand.user.last_name}` : 'Unknown User'}</span>
-              <span className="text-gray-500">{new Date(attendance.created).toLocaleString()}</span>
-            </li>
-          ))}
-        </ul>
+        <div className="overflow-x-auto">
+          <div className="grid grid-cols-1 gap-4 lg:gap-1">
+            {recentAttendances?.items.map((attendance) => (
+              <AttendanceItem key={attendance.id} attendance={attendance} />
+            ))}
+          </div>
+        </div>
         <button
-          onClick={() => navigate('/attendance')}
-          className="mt-4 bg-gray-200 text-gray-800 px-4 py-2 rounded"
+          onClick={() => navigate("/attendance")}
+          className="mt-4 bg-gray-200 text-gray-800 px-2 py-1 rounded"
         >
-          View All Attendances
+          View All
         </button>
       </div>
 
@@ -142,3 +146,16 @@ const AdminDashboard: React.FC = () => {
 };
 
 export default AdminDashboard;
+
+function AttendanceItem({ attendance }: { attendance: RecordModel }) {
+  return (
+    <div className="border p-4 rounded-lg shadow flex flex-col lg:flex-row gap-4">
+      <p>{new Date(attendance.created).toLocaleString()}</p>
+      <p>
+        {attendance.expand?.user
+          ? `${attendance.expand.user.first_name} ${attendance.expand.user.last_name} (${attendance.expand.user.email})`
+          : "Unknown User"}
+      </p>
+    </div>
+  );
+}

@@ -7,11 +7,14 @@
     "dev": "vite",
     "build": "tsc -b && vite build",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "deploy": "surge ./dist circlebjj.surge.sh"
   },
   "dependencies": {
     "@cmdnio/react-qr-reader": "^3.0.2",
     "@tailwindcss/forms": "^0.5.x",
+    "@tanstack/react-query": "^5.55.0",
+    "@tanstack/react-query-devtools": "^5.55.0",
     "lodash": "^4.17.21",
     "pocketbase": "^0.x.x",
     "qr-scanner": "^1.4.2",
@@ -22,7 +25,7 @@
   },
   "devDependencies": {
     "@eslint/js": "^9.9.0",
-    "@types/react": "^18.3.3",
+    "@types/react": "^18.3.7",
     "@types/react-dom": "^18.3.0",
     "@types/react-router-dom": "^5.x.x",
     "@types/tailwindcss": "^3.x.x",
@@ -37,5 +40,6 @@
     "typescript": "^5.5.3",
     "typescript-eslint": "^8.0.1",
     "vite": "^5.4.1"
-  }
+  },
+  "packageManager": "yarn@3.6.1+sha512.de524adec81a6c3d7a26d936d439d2832e351cdfc5728f9d91f3fc85dd20b04391c038e9b4ecab11cae2b0dd9f0d55fd355af766bc5c1a7f8d25d96bb2a0b2ca"
 }
