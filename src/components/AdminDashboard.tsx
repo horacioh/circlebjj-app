@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
 import { collections, pb } from "../pocketbase";
@@ -9,7 +9,9 @@ import { RecordModel } from "pocketbase";
 const AdminDashboard: React.FC = () => {
   const navigate = useNavigate();
   const [showScanner, setShowScanner] = useState(false);
+  const [scannedUserId, setScannedUserId] = useState<string | null>(null);
   const client = useQueryClient();
+
 
   const { data: stats, isLoading: loadingStats } = useQuery({
     queryKey: [queryKeys.STATS, queryKeys.ATTENDANCE_LIST, queryKeys.USER_LIST],
@@ -56,7 +58,15 @@ const AdminDashboard: React.FC = () => {
     },
   });
 
+  useEffect(() => {
+    if (scannedUserId) {
+      handleUserScan(scannedUserId);
+      setScannedUserId(null);
+    }
+  }, [scannedUserId])
+
   async function handleUserScan(userId: string) {
+    setScannedUserId(null)
     try {
       const attendance = await pb.collection(collections.attendances).create({
         user: userId,
@@ -94,9 +104,10 @@ const AdminDashboard: React.FC = () => {
       {showScanner && (
         <Scanner
           onScan={(userId) => {
-            if (userId) {
+            if (userId ) {
               setShowScanner(false);
-              handleUserScan(userId);
+              console.log('SCANNED!', showScanner)
+              setScannedUserId(userId);
             }
           }}
         />
