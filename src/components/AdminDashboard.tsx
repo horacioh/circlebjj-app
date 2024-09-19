@@ -1,12 +1,12 @@
-import React, { useEffect, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { useNavigate } from "react-router-dom";
-import { collections, pb } from "../pocketbase";
-import { Scanner } from "./Scanner";
-import { queryKeys } from "../querykeys";
-import { RecordModel } from "pocketbase";
-import { assign, createMachine, fromPromise, setup } from "xstate";
 import { useMachine } from "@xstate/react";
+import { RecordModel } from "pocketbase";
+import React from "react";
+import { useNavigate } from "react-router-dom";
+import { assign, fromPromise, setup } from "xstate";
+import { collections, pb } from "../pocketbase";
+import { queryKeys } from "../querykeys";
+import { Scanner } from "./Scanner";
 
 const AdminDashboard: React.FC = () => {
   const navigate = useNavigate();
@@ -14,7 +14,7 @@ const AdminDashboard: React.FC = () => {
   const [state, send] = useMachine(
     scannerMachine.provide({
       actors: {
-        processScan: fromPromise<void, {userId: string}>(async ({input: {userId}}) => {
+        processScan: fromPromise<void | Error, {userId: string}>(async ({input: {userId}}) => {
           if (userId) {
             try {
               const attendance = await pb
@@ -93,18 +93,6 @@ const AdminDashboard: React.FC = () => {
 
   return (
     <div className="space-y-6 max-w-4xl mx-auto mt-8">
-      <div
-        style={{
-          position: "absolute",
-          zIndex: 1000,
-          top: 0,
-          left: 0,
-          backgroundColor: "white",
-          padding: 4,
-        }}
-      >
-        {JSON.stringify(state.value)}
-      </div>
       <h2 className="text-2xl font-bold mb-4">Admin Dashboard</h2>
 
       {/* QR Scanner */}
@@ -114,8 +102,10 @@ const AdminDashboard: React.FC = () => {
       >
         Scan User QR Code
       </button>
+      {/* @ts-expect-error not sure why this is not working */}
       {state.matches("scanning") && (
         <Scanner
+          onCancel={() => send({type: 'CANCEL'})}
           onScan={(userId) => {
             if (userId) {
               send({ type: "SCAN", userId: userId });
@@ -193,6 +183,9 @@ const scannerMachine = setup({
       | {
           type: "OPEN_SCANNER";
         }
+        | {
+          type: "CANCEL";
+        }
       | {
           type: "SCAN";
           userId: string;
@@ -215,20 +208,23 @@ const scannerMachine = setup({
         SCAN: {
           target: "processing",
           actions: assign({
-            userId: ({context, event}) => {
+            userId: ({event}) => {
               return event.userId;
             },
           }),
         },
+        CANCEL: {
+          target: 'idle'
+        }
       },
     },
     processing: {
       invoke: {
+        // @ts-expect-error not sure why this is not working
         id: "processScan",
         src: "processScan",
-        input: ({ context }) => {
-          console.log("PROCESSING SCAN INPUT", context);
-          return context
+        input: ({ context }: { context: { userId: string } }) => {
+          return { userId: context.userId };
         },
         onDone: {
           target: "idle",
@@ -236,7 +232,7 @@ const scannerMachine = setup({
         onError: {
           target: "idle",
           actions: assign({
-            error: (context, event) => event.error,
+            error: () => "error",
           }),
         },
       },

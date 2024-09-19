@@ -1,7 +1,7 @@
 import QrScanner from "qr-scanner";
 import { useEffect, useRef, useState } from "react";
 
-export function Scanner({ onScan }: { onScan: (userId: string) => void }) {
+export function Scanner({ onScan, onCancel }: { onScan: (userId: string) => void; onCancel: () => void }) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const qrScannerRef = useRef<QrScanner | null>(null);
   const qrBoxEl = useRef<HTMLDivElement>(null);
@@ -65,8 +65,16 @@ export function Scanner({ onScan }: { onScan: (userId: string) => void }) {
   return (
     <div className="mt-4 fixed top-0 left-0 w-full h-full p-4 bg-slate-900">
       {/* QR */}
-      <video ref={videoRef} className="w-full h-full object-cover"></video>
-      <div ref={qrBoxEl} className="qr-box" />
+      <div className="relative w-full h-full">
+        <button
+          onClick={onCancel}
+          className="absolute top-4 left-4 z-10 px-4 py-2 bg-white text-black rounded-md shadow-md hover:bg-gray-100 transition-colors"
+        >
+          Cancel
+        </button>
+        <video ref={videoRef} className="w-full h-full object-cover"></video>
+        <div ref={qrBoxEl} className="qr-box" />
+      </div>
     </div>
   );
 }

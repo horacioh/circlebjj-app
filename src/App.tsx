@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import pkg from '../package.json'
 import { Navigate, Route, BrowserRouter as Router, Routes } from 'react-router-dom'
 import './App.css'
 import { client, pb } from './pocketbase'
@@ -76,6 +77,7 @@ function App() {
           <Route path="/admin/dashboard" element={<AdminDashboard />} />
           <Route path="/signup" element={<SignupForm />} />
         </Routes>
+        <p className="text-sm text-gray-500">version: {pkg.version}</p>
       </div>
     </Router>
     <ReactQueryDevtools initialIsOpen={false} />
