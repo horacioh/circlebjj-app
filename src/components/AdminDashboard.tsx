@@ -5,13 +5,44 @@ import { collections, pb } from "../pocketbase";
 import { Scanner } from "./Scanner";
 import { queryKeys } from "../querykeys";
 import { RecordModel } from "pocketbase";
+import { assign, createMachine, fromPromise, setup } from "xstate";
+import { useMachine } from "@xstate/react";
 
 const AdminDashboard: React.FC = () => {
   const navigate = useNavigate();
-  const [showScanner, setShowScanner] = useState(false);
-  const [scannedUserId, setScannedUserId] = useState<string | null>(null);
   const client = useQueryClient();
-
+  const [state, send] = useMachine(
+    scannerMachine.provide({
+      actors: {
+        processScan: fromPromise<void, {userId: string}>(async ({input: {userId}}) => {
+          if (userId) {
+            try {
+              const attendance = await pb
+                .collection(collections.attendances)
+                .create({
+                  user: userId,
+                });
+              console.log("====== Attendance recorded:", attendance);
+              client.invalidateQueries({
+                queryKey: [queryKeys.ATTENDANCE_LIST, queryKeys.STATS],
+              });
+              client.invalidateQueries({
+                queryKey: [
+                  queryKeys.STATS,
+                  queryKeys.ATTENDANCE_LIST,
+                  queryKeys.USER_LIST,
+                ],
+              });
+              alert("Attendance recorded successfully");
+            } catch (error) {
+              return new Error(`Error recording attendance: ${error}`);
+            }
+          }
+          
+        }),
+      },
+    })
+  );
 
   const { data: stats, isLoading: loadingStats } = useQuery({
     queryKey: [queryKeys.STATS, queryKeys.ATTENDANCE_LIST, queryKeys.USER_LIST],
@@ -58,56 +89,36 @@ const AdminDashboard: React.FC = () => {
     },
   });
 
-  useEffect(() => {
-    if (scannedUserId) {
-      handleUserScan(scannedUserId);
-      setScannedUserId(null);
-    }
-  }, [scannedUserId])
-
-  async function handleUserScan(userId: string) {
-    setScannedUserId(null)
-    try {
-      const attendance = await pb.collection(collections.attendances).create({
-        user: userId,
-      });
-      console.log("Attendance recorded:", attendance);
-      client.invalidateQueries({
-        queryKey: [queryKeys.ATTENDANCE_LIST, queryKeys.STATS],
-      });
-      client.invalidateQueries({
-        queryKey: [
-          queryKeys.STATS,
-          queryKeys.ATTENDANCE_LIST,
-          queryKeys.USER_LIST,
-        ],
-      });
-      alert("Attendance recorded successfully");
-    } catch (error) {
-      console.error("Error recording attendance:", error);
-    }
-  }
-
   if (loadingStats) return <div>Loading...</div>;
 
   return (
     <div className="space-y-6 max-w-4xl mx-auto mt-8">
+      <div
+        style={{
+          position: "absolute",
+          zIndex: 1000,
+          top: 0,
+          left: 0,
+          backgroundColor: "white",
+          padding: 4,
+        }}
+      >
+        {JSON.stringify(state.value)}
+      </div>
       <h2 className="text-2xl font-bold mb-4">Admin Dashboard</h2>
 
       {/* QR Scanner */}
       <button
-        onClick={() => setShowScanner(true)}
+        onClick={() => send({ type: "OPEN_SCANNER" })}
         className="bg-blue-500 text-white px-4 py-2 rounded mr-2"
       >
         Scan User QR Code
       </button>
-      {showScanner && (
+      {state.matches("scanning") && (
         <Scanner
           onScan={(userId) => {
-            if (userId ) {
-              setShowScanner(false);
-              console.log('SCANNED!', showScanner)
-              setScannedUserId(userId);
+            if (userId) {
+              send({ type: "SCAN", userId: userId });
             }
           }}
         />
@@ -170,3 +181,65 @@ function AttendanceItem({ attendance }: { attendance: RecordModel }) {
     </div>
   );
 }
+
+const scannerMachine = setup({
+  types: {
+    context: {
+      userId: "",
+    } as {
+      userId: string;
+    },
+    events: {} as
+      | {
+          type: "OPEN_SCANNER";
+        }
+      | {
+          type: "SCAN";
+          userId: string;
+        },
+  },
+}).createMachine({
+  id: "scannerMachine",
+  initial: "idle",
+  context: {
+    userId: "",
+  },
+  states: {
+    idle: {
+      on: {
+        OPEN_SCANNER: "scanning",
+      },
+    },
+    scanning: {
+      on: {
+        SCAN: {
+          target: "processing",
+          actions: assign({
+            userId: ({context, event}) => {
+              return event.userId;
+            },
+          }),
+        },
+      },
+    },
+    processing: {
+      invoke: {
+        id: "processScan",
+        src: "processScan",
+        input: ({ context }) => {
+          console.log("PROCESSING SCAN INPUT", context);
+          return context
+        },
+        onDone: {
+          target: "idle",
+        },
+        onError: {
+          target: "idle",
+          actions: assign({
+            error: (context, event) => event.error,
+          }),
+        },
+      },
+    },
+  },
+});

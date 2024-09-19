@@ -1289,6 +1289,22 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@xstate/react@npm:^4.1.2":
+  version: 4.1.2
+  resolution: "@xstate/react@npm:4.1.2"
+  dependencies:
+    use-isomorphic-layout-effect: ^1.1.2
+    use-sync-external-store: ^1.2.0
+  peerDependencies:
+    react: ^16.8.0 || ^17.0.0 || ^18.0.0
+    xstate: ^5.18.1
+  peerDependenciesMeta:
+    xstate:
+      optional: true
+  checksum: 534445c1e222afc2dcbfb25b03a73bc3f7e34fa4ceef1d567f12f550023544bbf4b85b939a4df8d0fa1a7b0693aa0b2eb7c572170252dc8e393240cdd68385fa
+  languageName: node
+  linkType: hard
+
 "@zxing/browser@npm:0.0.7":
   version: 0.0.7
   resolution: "@zxing/browser@npm:0.0.7"
@@ -1660,6 +1676,7 @@ __metadata:
     "@types/react-router-dom": ^5.x.x
     "@types/tailwindcss": ^3.x.x
     "@vitejs/plugin-react": ^4.3.1
+    "@xstate/react": ^4.1.2
     autoprefixer: ^10.4.20
     eslint: ^9.9.0
     eslint-plugin-react-hooks: ^5.1.0-rc.0
@@ -1678,6 +1695,7 @@ __metadata:
     typescript-eslint: ^8.0.1
     vite: ^5.4.1
     wrangler: ^3.78.5
+    xstate: ^5.18.1
   languageName: unknown
   linkType: soft
 
@@ -4149,6 +4167,27 @@ __metadata:
   languageName: node
   linkType: hard
 
+"use-isomorphic-layout-effect@npm:^1.1.2":
+  version: 1.1.2
+  resolution: "use-isomorphic-layout-effect@npm:1.1.2"
+  peerDependencies:
+    react: ^16.8.0 || ^17.0.0 || ^18.0.0
+  peerDependenciesMeta:
+    "@types/react":
+      optional: true
+  checksum: a6532f7fc9ae222c3725ff0308aaf1f1ddbd3c00d685ef9eee6714fd0684de5cb9741b432fbf51e61a784e2955424864f7ea9f99734a02f237b17ad3e18ea5cb
+  languageName: node
+  linkType: hard
+
+"use-sync-external-store@npm:^1.2.0":
+  version: 1.2.2
+  resolution: "use-sync-external-store@npm:1.2.2"
+  peerDependencies:
+    react: ^16.8.0 || ^17.0.0 || ^18.0.0
+  checksum: fe07c071c4da3645f112c38c0e57beb479a8838616ff4e92598256ecce527f2888c08febc7f9b2f0ce2f0e18540ba3cde41eb2035e4fafcb4f52955037098a81
+  languageName: node
+  linkType: hard
+
 "util-deprecate@npm:^1.0.2":
   version: 1.0.2
   resolution: "util-deprecate@npm:1.0.2"
@@ -4326,6 +4365,13 @@ __metadata:
     utf-8-validate:
       optional: true
   checksum: 91d4d35bc99ff6df483bdf029b9ea4bfd7af1f16fc91231a96777a63d263e1eabf486e13a2353970efc534f9faa43bdbf9ee76525af22f4752cbc5ebda333975
+  languageName: node
+  linkType: hard
+
+"xstate@npm:^5.18.1":
+  version: 5.18.1
+  resolution: "xstate@npm:5.18.1"
+  checksum: 5933575ae536ec13eb781f7fa3fb9ef360f56612ddbb903d26135a01e04fb764c67afe62394c1635e9bb0262fe111f7fecaccff69b781d705a163629dd464fb3
   languageName: node
   linkType: hard
 

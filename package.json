@@ -8,20 +8,22 @@
     "build": "tsc -b && vite build",
     "lint": "eslint .",
     "preview": "vite preview",
-    "deploy": "surge ./dist circlebjj.surge.sh"
+    "deploy": "wrangler pages deploy dist"
   },
   "dependencies": {
     "@cmdnio/react-qr-reader": "^3.0.2",
     "@tailwindcss/forms": "^0.5.x",
     "@tanstack/react-query": "^5.55.0",
     "@tanstack/react-query-devtools": "^5.55.0",
+    "@xstate/react": "^4.1.2",
     "lodash": "^4.17.21",
     "pocketbase": "^0.x.x",
     "qr-scanner": "^1.4.2",
     "qrcode.react": "^3.1.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
-    "react-router-dom": "^6.x.x"
+    "react-router-dom": "^6.x.x",
+    "xstate": "^5.18.1"
   },
   "devDependencies": {
     "@eslint/js": "^9.9.0",
