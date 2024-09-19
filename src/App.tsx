@@ -11,7 +11,7 @@ import Login from './components/Login'
 import MainNav from './components/MainNav'
 import MemberList from './components/MemberList'
 import MemberProfile from './components/MemberProfile'
-import SignUp from './components/SignUp'
+import SignupForm from './components/SignupForm'
 
 function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(false)
@@ -25,6 +25,8 @@ function App() {
       setIsLoggedIn(isAuth)
       setIsAdmin(pb.authStore.isAdmin || pb.authStore.model?.role.includes('admin'))
     }
+
+      console.log(`== ~ checkAuth ~ pb.authStore.model:`, pb.authStore.model)
 
     checkAuth()
     pb.authStore.onChange(checkAuth)
@@ -46,7 +48,6 @@ function App() {
           setIsAdmin={setIsAdmin}
         />
         <Routes>
-          <Route path="/signup" element={<SignUp />} />
           <Route path="/login" element={isLoggedIn ? isAdmin ? <Navigate to="/dashboard" /> : <Navigate to="/profile" /> : <Login />} />
           <Route 
             path="/admin" 
@@ -72,6 +73,8 @@ function App() {
             path="/" 
             element={isLoggedIn ? <Navigate to={isAdmin ? "/dashboard" : "/profile"} />: <Navigate to="/login" />} 
           />
+          <Route path="/admin/dashboard" element={<AdminDashboard />} />
+          <Route path="/signup" element={<SignupForm />} />
         </Routes>
       </div>
     </Router>

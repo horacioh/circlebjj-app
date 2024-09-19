@@ -10,8 +10,8 @@ export interface User extends Collection {
     last_name: string
     email: string
     verified : string
-    belt?: string
-    grade?: string
+    belt?: 'white' | 'blue' | 'purple' | 'brown' | 'black'
+    grade?: '1' | '2' | '3' | '4' | '5' | '6' | '7' | '8' | '9'
     attendanceCount?: number
     avatar?: string
 }
