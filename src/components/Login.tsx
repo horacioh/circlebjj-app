@@ -1,21 +1,22 @@
 import React, { useState } from "react";
 import { pb, collections } from "../pocketbase";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 
 const Login: React.FC = () => {
   const navigate = useNavigate();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
+  const location = useLocation();
+  console.log(`== ~ handleSubmit ~ location.state:`, location.state)
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
     try {
-      await pb.collection(collections.users).authWithPassword(email, password);
-      const returnPath = sessionStorage.getItem('returnPath') || '/profile';
-      sessionStorage.removeItem('returnPath');
-      navigate(returnPath);
+      const user = await pb.collection(collections.users).authWithPassword(email, password);
+      const toRoute = location.state?.from ? location.state.from : user.record.role.includes('admin') ? '/dashboard' : '/profile';
+      navigate(toRoute);
     } catch (error) {
       console.error("Error logging in:", error);
       setError("Invalid email or password");

@@ -60,16 +60,16 @@ const AdminDashboard: React.FC = () => {
       <h2 className="text-2xl font-bold mb-4">Admin Dashboard</h2>
 
       {/* Summary Statistics */}
-      <div className="grid grid-cols-1 gap-4 lg:gap-1">
-        <div className="bg-blue-100 p-4 rounded-lg">
+      <div className="flex flex-col md:flex-row md:space-x-4 space-y-4 md:space-y-0">
+        <div className="bg-blue-100 p-4 rounded-lg flex-1">
           <h3 className="font-semibold text-lg">Total Users</h3>
           <p className="text-3xl font-bold">{stats?.totalUsers || 0}</p>
         </div>
-        <div className="bg-green-100 p-4 rounded-lg">
+        <div className="bg-green-100 p-4 rounded-lg flex-1">
           <h3 className="font-semibold text-lg">Attendances Today</h3>
           <p className="text-3xl font-bold">{stats?.attendancesToday || 0}</p>
         </div>
-        <div className="bg-yellow-100 p-4 rounded-lg">
+        <div className="bg-yellow-100 p-4 rounded-lg flex-1">
           <h3 className="font-semibold text-lg">New Users This Month</h3>
           <p className="text-3xl font-bold">{stats?.newUsersThisMonth || 0}</p>
         </div>

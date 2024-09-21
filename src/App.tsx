@@ -1,24 +1,23 @@
+import { QueryClientProvider } from "@tanstack/react-query";
+import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 import { useEffect, useState } from "react";
-import pkg from "../package.json";
 import {
   Navigate,
   Route,
   BrowserRouter as Router,
   Routes,
 } from "react-router-dom";
+import pkg from "../package.json";
 import "./App.css";
-import { client, pb } from "./pocketbase";
-import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
-import { QueryClientProvider } from "@tanstack/react-query";
 import AdminDashboard from "./components/AdminDashboard";
-import AdminLogin from "./components/AdminLogin";
 import AttendancesList from "./components/AttendancesList";
+import CheckInForm from "./components/CheckInForm"; // Add this import
 import Login from "./components/Login";
 import MainNav from "./components/MainNav";
 import MemberList from "./components/MemberList";
 import MemberProfile from "./components/MemberProfile";
 import SignupForm from "./components/SignupForm";
-import CheckInForm from "./components/CheckInForm"; // Add this import
+import { client, pb } from "./pocketbase";
 
 function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -67,7 +66,6 @@ function App() {
                 )
               }
             />
-            <Route path="/admin" element={<AdminLogin />} />
             <Route
               path="/profile"
               element={
@@ -80,18 +78,18 @@ function App() {
                 isLoggedIn && isAdmin ? (
                   <AdminDashboard />
                 ) : (
-                  <Navigate to="/admin" />
+                  <Navigate to="/login" state={{ from: '/dashboard' }} />
                 )
               }
             />
             <Route
               path="/members"
-              element={isLoggedIn ? <MemberList /> : <Navigate to="/login" />}
+              element={isLoggedIn ? <MemberList /> : <Navigate to="/login" state={{ from: '/members' }} />}
             />
             <Route
               path="/attendance"
               element={
-                isLoggedIn ? <AttendancesList /> : <Navigate to="/login" />
+                isLoggedIn ? <AttendancesList /> : <Navigate to="/login" state={{ from: '/attendance' }} />
               }
             />
             <Route
@@ -107,7 +105,7 @@ function App() {
             <Route path="/signup" element={<SignupForm />} />
             <Route
               path="/check-in"
-              element={isLoggedIn ? <CheckInForm /> : <Navigate to="/login" />}
+              element={<CheckInForm />}
             />
           </Routes>
           <div className="flex justify-center items-center p-20">

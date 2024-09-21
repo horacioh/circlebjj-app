@@ -1,6 +1,8 @@
 import React, { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import QRCode from "qrcode.react"; // You'll need to install this package
+import { collections, pb } from "../pocketbase";
+import { useCurrentUser } from "../models";
 
 interface MainNavProps {
   isLoggedIn: boolean;
@@ -8,16 +10,34 @@ interface MainNavProps {
 }
 
 const MainNav: React.FC<MainNavProps> = ({ isLoggedIn, isAdmin }) => {
+  const user = useCurrentUser();
+  const [QRUrl, setQRUrl] = useState('');
   const [showQR, setShowQR] = useState(false);
-
+  const location = useLocation();
   if (!isLoggedIn) {
     return null;
   }
 
   const isActive = (path: string) => {
-    return window.location.pathname === path
+    return location.pathname === path
       ? "text-blue-700 font-bold"
       : "text-blue-500";
+  };
+
+  const handleCreateQrCode = async () => {
+    if (QRUrl) {
+      setShowQR(true)
+    } else {
+      if (user) {
+      const checkinCode = await pb
+        .collection(collections.checkin_codes)
+        .create({ createdBy: user.id });
+
+      console.log(`== ~ handleCreateQrCode ~ checkinCode:`, checkinCode);
+      setQRUrl(`${window.location.origin}/check-in?code=${checkinCode.id}`)
+        setShowQR(true)
+      }
+    }
   };
 
   return isLoggedIn ? (
@@ -66,7 +86,7 @@ const MainNav: React.FC<MainNavProps> = ({ isLoggedIn, isAdmin }) => {
                 </li>
                 <li>
                   <button
-                    onClick={() => setShowQR(true)}
+                    onClick={handleCreateQrCode}
                     className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded"
                   >
                     Show QR
@@ -80,7 +100,7 @@ const MainNav: React.FC<MainNavProps> = ({ isLoggedIn, isAdmin }) => {
       {showQR && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
           <div className="bg-white p-8 rounded-lg">
-            <QRCode value="https://your-qr-code-data-here.com" size={256} />
+            <QRCode value={QRUrl} size={256} />
             <button
               onClick={() => setShowQR(false)}
               className="mt-4 bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded"

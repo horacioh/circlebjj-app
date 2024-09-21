@@ -15,4 +15,5 @@ export const collections = {
     users: 'users',
     attendances: 'attendances',
     classes: 'classes',
+    checkin_codes: 'checkin_codes',
 }

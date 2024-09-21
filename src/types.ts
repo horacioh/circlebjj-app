@@ -20,6 +20,7 @@ export interface User extends Collection {
 
 export interface Attendance extends Collection {
     user: string
+    class: string
     expand?: {
         user: User
     }

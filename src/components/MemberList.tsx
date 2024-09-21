@@ -5,7 +5,6 @@ import { User } from "../types";
 const MemberList: React.FC = () => {
   const { data: users = [], isLoading } = useUsers({ pageSize: 200 });
 
-  console.log(`== ~ users:`, users)
   const [searchTerm, setSearchTerm] = useState("");
 
   if (isLoading) {

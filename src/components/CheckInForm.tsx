@@ -1,78 +1,67 @@
-import React, { useState, useEffect } from 'react';
-import { pb, getCurrentUser, collections } from '../pocketbase';
-import { User } from '../types';
-import { useNavigate } from 'react-router-dom';
-
-interface Class {
-  id: string;
-  name: string;
-}
+import React, { useEffect, useState } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
+import { useAttendanceMutation, useClasses, useCurrentUser } from "../models";
+import { IMAGE_URL } from "../pocketbase";
 
 const CheckInForm: React.FC = () => {
-  const [currentUser, setCurrentUser] = useState<User | null>(null);
-  const [selectedClass, setSelectedClass] = useState('');
-  const [classes, setClasses] = useState<Class[]>([]);
+  const location = useLocation();
+  const user = useCurrentUser();
+  const classes = useClasses();
+  const [selectedClass, setSelectedClass] = useState("");
+
+  console.log(`== ~ selectedClass:`, selectedClass)
   const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState('');
-  const [success, setSuccess] = useState('');
+  const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
   const navigate = useNavigate();
+  const checkin = useAttendanceMutation()
+
+  // Add this line to get the 'code' query parameter
+  const code = new URLSearchParams(location.search).get('code') || '';
 
   useEffect(() => {
     const fetchData = async () => {
-      const user = getCurrentUser() as User;
       if (!user) {
         // Redirect to login and store the return path
-        sessionStorage.setItem('returnPath', '/check-in');
-        navigate('/login');
-        return;
-      }
-      setCurrentUser(user);
 
-      try {
-        // Fetch available classes from the PocketBase "classes" collection
-        const classesResult = await pb.collection(collections.classes).getList<Class>(1, 50, {
-          sort: 'name',
+        navigate("/login", {
+          state: { from: `${location.pathname}${location.search}` },
         });
-        setClasses(classesResult.items);
-      } catch (error) {
-        if (classes.length == 0) {
-          console.error('Error fetching classes:', error);
-        } else {
-          setError('');
-        }
+        return;
       }
     };
 
     fetchData();
-  }, [navigate, classes]);
+  }, [navigate, user, location]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
-    setError('');
-    setSuccess('');
+    setError("");
+    setSuccess("");
 
     try {
-      if (!currentUser) {
-        throw new Error('User not found');
+      if (!user) {
+        throw new Error("User not found");
       }
 
-    //   const attendance = await pb.collection(collections.attendances).create({
-    //     user: currentUser.id,
-    //     class: selectedClass,
-    //   });
+      await checkin.mutateAsync({
+        code, // Use the 'code' variable here
+        classId: selectedClass,
+        userId: user.id
+      });
 
-      setSuccess('Check-in successful!');
-      setSelectedClass('');
+      setSuccess("Check-in successful!");
+      setSelectedClass("");
     } catch (error) {
-      console.error('Error checking in:', error);
-      setError('Failed to check in. Please try again.');
+      console.error("Error checking in:", error);
+      setError("Failed to check in. Please try again.");
     } finally {
       setIsLoading(false);
     }
   };
 
-  if (!currentUser) {
+  if (!user) {
     return <div>Loading...</div>;
   }
 
@@ -80,18 +69,27 @@ const CheckInForm: React.FC = () => {
     <div className="max-w-md mx-auto mt-8">
       <h2 className="text-2xl font-bold mb-4">Check-In</h2>
       <form onSubmit={handleSubmit} className="space-y-4">
-        <div>
-          <label htmlFor="userId" className="block mb-1">User ID</label>
-          <input
-            id="userId"
-            type="text"
-            value={currentUser.id}
-            readOnly
-            className="w-full p-2 border rounded bg-gray-100"
+        <div className="bg-white shadow-md rounded-lg p-4 flex items-center space-x-4">
+          <img
+            src={
+              user.avatar
+                ? `${IMAGE_URL}/users/${user.id}/${user.avatar}`
+                : "/default-avatar.png"
+            }
+            alt={`${user.first_name} ${user.last_name}`}
+            className="w-12 h-12 rounded-full object-cover"
           />
+          <div>
+            <p className="font-semibold text-lg">
+              {user.first_name} {user.last_name}
+            </p>
+            <p className="text-gray-500 text-sm">Student</p>
+          </div>
         </div>
         <div>
-          <label htmlFor="class" className="block mb-1">Class</label>
+          <label htmlFor="class" className="block mb-1">
+            Class
+          </label>
           <select
             id="class"
             value={selectedClass}
@@ -100,8 +98,10 @@ const CheckInForm: React.FC = () => {
             required
           >
             <option value="">Select a class</option>
-            {classes.map((cls) => (
-              <option key={cls.id} value={cls.id}>{cls.name}</option>
+            {classes.data?.map((cls) => (
+              <option key={cls.id} value={cls.id}>
+                {cls.name}
+              </option>
             ))}
           </select>
         </div>
@@ -110,7 +110,7 @@ const CheckInForm: React.FC = () => {
           className="w-full p-2 bg-blue-500 text-white rounded hover:bg-blue-600 disabled:bg-blue-300"
           disabled={isLoading}
         >
-          {isLoading ? 'Checking in...' : 'Confirm Check-In'}
+          {isLoading ? "Checking in..." : "Confirm Check-In"}
         </button>
       </form>
       {error && <p className="text-red-500 mt-4">{error}</p>}

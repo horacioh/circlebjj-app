@@ -1,4 +1,4 @@
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { collections, pb } from "./pocketbase"; // Assuming you have a pocketbase instance
 import { queryKeys } from "./querykeys";
 import { Attendance, User } from "./types";
@@ -70,3 +70,38 @@ export const useUsers = ({
     },
   });
 };
+
+interface Class {
+  id: string;
+  name: string;
+}
+
+export function useClasses() {
+  return useQuery({
+    queryKey: [queryKeys.CLASS_LIST],
+    queryFn: async () => {
+      const response = await pb.collection(collections.classes).getList<Class>(1, 50, {
+        sort: "name",
+      });
+      return response.items;
+    },
+  });
+}
+
+export function useAttendanceMutation() {
+  return useMutation({
+    mutationFn: async ({code, classId, userId}: {code: string, classId: string, userId: string}) => {
+      const validCode = await pb.collection(collections.checkin_codes).getOne(code);
+      if (!validCode || !classId || !userId) {
+        return new Error(`Mutation Error: ${JSON.stringify({code, classId, userId})}`);
+      } else {
+        const response = await pb.collection(collections.attendances).create({
+          user: userId,
+          class: classId,
+          code
+        });
+        return response;
+      }
+    },
+  });
+}

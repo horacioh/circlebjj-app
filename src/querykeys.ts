@@ -6,4 +6,5 @@ export const queryKeys = {
     'ATTENDANCE_LIST': 'attendance_list',
     'ATTENDANCE': 'attendance',
     'STATS': 'stats',
+    'CLASS_LIST': 'class_list',
 }
