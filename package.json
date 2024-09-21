@@ -1,7 +1,7 @@
 {
   "name": "circlebjj",
   "private": true,
-  "version": "0.1.0",
+  "version": "0.1.1",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -18,7 +18,6 @@
     "@xstate/react": "^4.1.2",
     "lodash": "^4.17.21",
     "pocketbase": "^0.x.x",
-    "qr-scanner": "^1.4.2",
     "qrcode.react": "^3.1.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",

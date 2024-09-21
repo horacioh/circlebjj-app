@@ -1,48 +1,12 @@
-import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { useMachine } from "@xstate/react";
-import { RecordModel } from "pocketbase";
+import { useQuery } from "@tanstack/react-query";
 import React from "react";
 import { useNavigate } from "react-router-dom";
-import { assign, fromPromise, setup } from "xstate";
 import { collections, pb } from "../pocketbase";
 import { queryKeys } from "../querykeys";
-import { Scanner } from "./Scanner";
+import { RecordModel } from "pocketbase";
 
 const AdminDashboard: React.FC = () => {
   const navigate = useNavigate();
-  const client = useQueryClient();
-  const [state, send] = useMachine(
-    scannerMachine.provide({
-      actors: {
-        processScan: fromPromise<void | Error, {userId: string}>(async ({input: {userId}}) => {
-          if (userId) {
-            try {
-              const attendance = await pb
-                .collection(collections.attendances)
-                .create({
-                  user: userId,
-                });
-              console.log("====== Attendance recorded:", attendance);
-              client.invalidateQueries({
-                queryKey: [queryKeys.ATTENDANCE_LIST, queryKeys.STATS],
-              });
-              client.invalidateQueries({
-                queryKey: [
-                  queryKeys.STATS,
-                  queryKeys.ATTENDANCE_LIST,
-                  queryKeys.USER_LIST,
-                ],
-              });
-              alert("Attendance recorded successfully");
-            } catch (error) {
-              return new Error(`Error recording attendance: ${error}`);
-            }
-          }
-          
-        }),
-      },
-    })
-  );
 
   const { data: stats, isLoading: loadingStats } = useQuery({
     queryKey: [queryKeys.STATS, queryKeys.ATTENDANCE_LIST, queryKeys.USER_LIST],
@@ -94,25 +58,6 @@ const AdminDashboard: React.FC = () => {
   return (
     <div className="space-y-6 max-w-4xl mx-auto mt-8">
       <h2 className="text-2xl font-bold mb-4">Admin Dashboard</h2>
-
-      {/* QR Scanner */}
-      <button
-        onClick={() => send({ type: "OPEN_SCANNER" })}
-        className="bg-blue-500 text-white px-4 py-2 rounded mr-2"
-      >
-        Scan User QR Code
-      </button>
-      {/* @ts-expect-error not sure why this is not working */}
-      {state.matches("scanning") && (
-        <Scanner
-          onCancel={() => send({type: 'CANCEL'})}
-          onScan={(userId) => {
-            if (userId) {
-              send({ type: "SCAN", userId: userId });
-            }
-          }}
-        />
-      )}
 
       {/* Summary Statistics */}
       <div className="grid grid-cols-1 gap-4 lg:gap-1">
@@ -171,71 +116,3 @@ function AttendanceItem({ attendance }: { attendance: RecordModel }) {
     </div>
   );
 }
-
-const scannerMachine = setup({
-  types: {
-    context: {
-      userId: "",
-    } as {
-      userId: string;
-    },
-    events: {} as
-      | {
-          type: "OPEN_SCANNER";
-        }
-        | {
-          type: "CANCEL";
-        }
-      | {
-          type: "SCAN";
-          userId: string;
-        },
-  },
-}).createMachine({
-  id: "scannerMachine",
-  initial: "idle",
-  context: {
-    userId: "",
-  },
-  states: {
-    idle: {
-      on: {
-        OPEN_SCANNER: "scanning",
-      },
-    },
-    scanning: {
-      on: {
-        SCAN: {
-          target: "processing",
-          actions: assign({
-            userId: ({event}) => {
-              return event.userId;
-            },
-          }),
-        },
-        CANCEL: {
-          target: 'idle'
-        }
-      },
-    },
-    processing: {
-      invoke: {
-        // @ts-expect-error not sure why this is not working
-        id: "processScan",
-        src: "processScan",
-        input: ({ context }: { context: { userId: string } }) => {
-          return { userId: context.userId };
-        },
-        onDone: {
-          target: "idle",
-        },
-        onError: {
-          target: "idle",
-          actions: assign({
-            error: () => "error",
-          }),
-        },
-      },
-    },
-  },
-});

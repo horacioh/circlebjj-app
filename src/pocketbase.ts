@@ -14,4 +14,5 @@ export const getCurrentUser = () => {
 export const collections = {
     users: 'users',
     attendances: 'attendances',
+    classes: 'classes',
 }

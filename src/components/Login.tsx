@@ -1,6 +1,6 @@
-import React, { useMemo, useState } from "react";
-import { collections, getCurrentUser, pb } from "../pocketbase";
-import { useNavigate, redirect } from "react-router-dom";
+import React, { useState } from "react";
+import { pb, collections } from "../pocketbase";
+import { useNavigate } from "react-router-dom";
 
 const Login: React.FC = () => {
   const navigate = useNavigate();
@@ -8,29 +8,14 @@ const Login: React.FC = () => {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
 
-  useMemo(() => {
-    const currentUser = getCurrentUser();
-
-    if (currentUser) {
-      const isAdmin = currentUser?.role?.length
-        ? currentUser.role.includes("admin")
-        : false;
-      return redirect(isAdmin ? "/dashboard" : "/profile");
-    }
-  }, []);
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
     try {
-      const user = await pb
-        .collection(collections.users)
-        .authWithPassword(email, password);
-      navigate(
-        user.record.role?.length && user.record.role.includes("admin")
-          ? "/dashboard"
-          : "/profile"
-      );
+      await pb.collection(collections.users).authWithPassword(email, password);
+      const returnPath = sessionStorage.getItem('returnPath') || '/profile';
+      sessionStorage.removeItem('returnPath');
+      navigate(returnPath);
     } catch (error) {
       console.error("Error logging in:", error);
       setError("Invalid email or password");
