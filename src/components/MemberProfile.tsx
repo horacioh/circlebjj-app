@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useState, useRef } from 'react'
 import { pb, getCurrentUser, collections, IMAGE_URL } from '../pocketbase'
 import { useNavigate } from 'react-router-dom'
 import { Attendance, User } from '../types'
@@ -9,6 +9,15 @@ const MemberProfile: React.FC = () => {
   const [attendances, setAttendances] = useState<Attendance[]>([])
   const [totalAttendancesThisMonth, setTotalAttendancesThisMonth] = useState(0)
   const [totalAttendances, setTotalAttendances] = useState(0)
+  const [avatarFile, setAvatarFile] = useState<File | null>(null)
+  const [updateMessage, setUpdateMessage] = useState('')
+  const [isUpdating, setIsUpdating] = useState(false)
+
+  const fileInputRef = useRef<HTMLInputElement>(null)
+
+  const handleAvatarClick = () => {
+    fileInputRef.current?.click()
+  }
 
   useEffect(() => {
     const fetchData = async () => {
@@ -45,6 +54,32 @@ const MemberProfile: React.FC = () => {
     navigate('/login')
   }
 
+  const handleAvatarChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0] && member) {
+      setIsUpdating(true)
+      setUpdateMessage('')
+      const file = e.target.files[0]
+
+      try {
+        const formData = new FormData()
+        formData.append('avatar', file)
+
+        await pb.collection(collections.users).update(member.id, formData)
+
+        // Refresh the user data
+        const updatedUser = await pb.collection(collections.users).getOne(member.id)
+        setMember(updatedUser as User)
+
+        setUpdateMessage('Avatar updated successfully!')
+      } catch (error) {
+        console.error('Error updating avatar:', error)
+        setUpdateMessage('Failed to update avatar. Please try again.')
+      } finally {
+        setIsUpdating(false)
+      }
+    }
+  }
+
   if (!member) {
     return <Login />
   }
@@ -56,7 +91,26 @@ const MemberProfile: React.FC = () => {
       {/* User Information Box */}
       <div className="bg-white p-6 rounded-lg shadow">
         <div className="flex items-center space-x-4">
-          <img src={`${IMAGE_URL}/users/${member.id}/${member.avatar}`} alt="Avatar" className="w-24 h-24 rounded-full" />
+          <div className="relative">
+            <img 
+              src={`${IMAGE_URL}/users/${member.id}/${member.avatar}?${Date.now()}`} 
+              alt="Avatar" 
+              className="w-24 h-24 rounded-full"
+            />
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/*"
+              onChange={handleAvatarChange}
+              className="hidden"
+            />
+            <div 
+              onClick={handleAvatarClick}
+              className={`absolute inset-0 flex items-center justify-center bg-black bg-opacity-50 text-white text-xs rounded-full opacity-0 hover:opacity-100 transition-opacity cursor-pointer ${isUpdating ? 'pointer-events-none' : ''}`}
+            >
+              {isUpdating ? 'Updating...' : 'Change Avatar'}
+            </div>
+          </div>
           <div>
             <h3 className="text-xl font-semibold">{member.first_name} {member.last_name}</h3>
             <p className="text-gray-600">{member.email}</p>
@@ -67,6 +121,21 @@ const MemberProfile: React.FC = () => {
             {member.birthdate ? <p className="text-gray-600">Birthdate: {new Date(member.birthdate).toLocaleDateString()}</p> : null}
           </div>
         </div>
+        {avatarFile && (
+          <div className="mt-4">
+            <button
+              onClick={handleAvatarUpdate}
+              className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
+            >
+              Update Avatar
+            </button>
+          </div>
+        )}
+        {updateMessage && (
+          <p className={`mt-2 ${updateMessage.includes('successfully') ? 'text-green-600' : 'text-red-600'}`}>
+            {updateMessage}
+          </p>
+        )}
       </div>
 
       {/* Attendance Boxes Container */}
