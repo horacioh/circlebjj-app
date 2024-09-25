@@ -1,7 +1,9 @@
 import React, { useState } from 'react';
-import { pb } from '../pocketbase';
+import { collections, pb } from '../pocketbase';
+import { useNavigate } from 'react-router-dom';
 
 const SignupForm: React.FC = () => {
+  const navigate = useNavigate();
   const [formData, setFormData] = useState({
     username: '',
     firstName: '',
@@ -19,7 +21,7 @@ const SignupForm: React.FC = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      const record = await pb.collection('members').create({
+      const record = await pb.collection(collections.users).create({
         username: formData.username,
         email: formData.email,
         password: formData.password,
@@ -27,9 +29,11 @@ const SignupForm: React.FC = () => {
         first_name: formData.firstName,
         last_name: formData.lastName,
         belt: formData.belt || undefined,
+        role: 'member',
       });
       console.log('User created:', record);
       // Redirect or show success message
+      navigate('/login')
     } catch (error) {
       console.error('Error creating user:', error);
       // Show error message to user
