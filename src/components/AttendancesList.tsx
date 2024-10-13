@@ -40,7 +40,7 @@ function AttendanceItem({ attendance }: { attendance: Attendance }) {
       <p>{new Date(attendance.created).toLocaleString()}</p>
       <p>
         {attendance.expand?.user
-          ? `${attendance.expand.user.first_name} ${attendance.expand.user.last_name} (${attendance.expand.user.email})`
+          ? `${attendance.expand.user.first_name} ${attendance.expand.user.last_name}`
           : 'Unknown User'}
       </p>
     </div>

@@ -20,6 +20,7 @@
     "pocketbase": "^0.x.x",
     "qrcode.react": "^3.1.0",
     "react": "^18.3.1",
+    "react-charts": "beta",
     "react-dom": "^18.3.1",
     "react-router-dom": "^6.x.x",
     "xstate": "^5.18.1"

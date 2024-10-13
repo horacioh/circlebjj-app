@@ -9,7 +9,6 @@ const MemberProfile: React.FC = () => {
   const [attendances, setAttendances] = useState<Attendance[]>([])
   const [totalAttendancesThisMonth, setTotalAttendancesThisMonth] = useState(0)
   const [totalAttendances, setTotalAttendances] = useState(0)
-  const [avatarFile, setAvatarFile] = useState<File | null>(null)
   const [updateMessage, setUpdateMessage] = useState('')
   const [isUpdating, setIsUpdating] = useState(false)
 
@@ -34,6 +33,8 @@ const MemberProfile: React.FC = () => {
 
         // Calculate total attendances this month
         const firstDayOfMonth = new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString()
+
+        console.log(`== ~ fetchData ~ firstDayOfMonth:`, firstDayOfMonth)
         const monthlyAttendances = await pb.collection(collections.attendances).getList(1, 1, {
           filter: `user="${user.id}" && created >= "${firstDayOfMonth}"`,
         })
@@ -68,7 +69,7 @@ const MemberProfile: React.FC = () => {
 
         // Refresh the user data
         const updatedUser = await pb.collection(collections.users).getOne(member.id)
-        setMember(updatedUser as User)
+        setMember(updatedUser as unknown as User)
 
         setUpdateMessage('Avatar updated successfully!')
       } catch (error) {
@@ -121,16 +122,6 @@ const MemberProfile: React.FC = () => {
             {member.birthdate ? <p className="text-gray-600">Birthdate: {new Date(member.birthdate).toLocaleDateString()}</p> : null}
           </div>
         </div>
-        {avatarFile && (
-          <div className="mt-4">
-            <button
-              onClick={handleAvatarUpdate}
-              className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
-            >
-              Update Avatar
-            </button>
-          </div>
-        )}
         {updateMessage && (
           <p className={`mt-2 ${updateMessage.includes('successfully') ? 'text-green-600' : 'text-red-600'}`}>
             {updateMessage}

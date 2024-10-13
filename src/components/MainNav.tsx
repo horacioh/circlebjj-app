@@ -7,11 +7,12 @@ import { useCurrentUser } from "../models";
 interface MainNavProps {
   isLoggedIn: boolean;
   isAdmin: boolean;
+  isCoach: boolean;
 }
 
-const MainNav: React.FC<MainNavProps> = ({ isLoggedIn, isAdmin }) => {
+const MainNav: React.FC<MainNavProps> = ({ isLoggedIn, isAdmin, isCoach }) => {
   const user = useCurrentUser();
-  const [QRUrl, setQRUrl] = useState('');
+  const [QRUrl, setQRUrl] = useState("");
   const [showQR, setShowQR] = useState(false);
   const location = useLocation();
   if (!isLoggedIn) {
@@ -26,16 +27,16 @@ const MainNav: React.FC<MainNavProps> = ({ isLoggedIn, isAdmin }) => {
 
   const handleCreateQrCode = async () => {
     if (QRUrl) {
-      setShowQR(true)
+      setShowQR(true);
     } else {
       if (user) {
-      const checkinCode = await pb
-        .collection(collections.checkin_codes)
-        .create({ createdBy: user.id });
+        const checkinCode = await pb
+          .collection(collections.checkin_codes)
+          .create({ createdBy: user.id });
 
-      console.log(`== ~ handleCreateQrCode ~ checkinCode:`, checkinCode);
-      setQRUrl(`${window.location.origin}/check-in?code=${checkinCode.id}`)
-        setShowQR(true)
+        console.log(`== ~ handleCreateQrCode ~ checkinCode:`, checkinCode);
+        setQRUrl(`${window.location.origin}/check-in?code=${checkinCode.id}`);
+        setShowQR(true);
       }
     }
   };
@@ -84,6 +85,10 @@ const MainNav: React.FC<MainNavProps> = ({ isLoggedIn, isAdmin }) => {
                     Attendance
                   </Link>
                 </li>
+              </>
+            ) : null}
+            {isAdmin || isCoach ? (
+              <>
                 <li>
                   <button
                     onClick={handleCreateQrCode}

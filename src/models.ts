@@ -23,7 +23,7 @@ export const useAttendances = ({
         .collection<Attendance>(collections.attendances)
         .getList(pageNumber, pageSize, {
           expand: "user",
-          sort: '-created',
+          sort: "-created",
         });
       return response.items;
     },
@@ -45,25 +45,11 @@ export const useUsers = ({
         .collection(collections.users)
         .getList(pageNumber, pageSize);
 
-      const firstDayOfMonth = new Date(
-        new Date().getFullYear(),
-        new Date().getMonth(),
-        1
-      ).toISOString();
-      const attendances = await pb
-        .collection(collections.attendances)
-        .getFullList({
-          filter: `created >= "${firstDayOfMonth}"`,
-        });
+      const attendanceCounts = await pb.collection(collections.attendance_count).getList(1, 100);
       // @ts-expect-error the expand is typed
-      const usersWithAttendance: Array<
-        User
-      > = await Promise.all(
+      const usersWithAttendance: Array<User> = await Promise.all(
         response.items.map(async (user) => {
-          const attendanceCount: number = attendances.filter(
-            (attendance) => attendance.user == user.id
-          ).length;
-          return { ...user, attendanceCount };
+          return { ...user, attendanceCount: attendanceCounts.items.find(ac => ac.user === user.id)?.totalCount || 0 };
         })
       );
       return usersWithAttendance;
@@ -74,33 +60,103 @@ export const useUsers = ({
 interface Class {
   id: string;
   name: string;
+  startHour: number;
+  startMinutes: number;
 }
 
 export function useClasses() {
   return useQuery({
     queryKey: [queryKeys.CLASS_LIST],
     queryFn: async () => {
-      const response = await pb.collection(collections.classes).getList<Class>(1, 50, {
-        sort: "name",
-      });
+      const filter = getClassFilter();
+      const response = await pb
+        .collection(collections.classes)
+        .getList<Class>(1, 50, {
+          sort: "startHour",
+          filter,
+        });
       return response.items;
     },
   });
 }
 
+function getClassFilter({
+  date = new Date(),
+  hourOffset = 2,
+}: {
+  date?: Date;
+  hourOffset?: number;
+} = {}) {
+  const dayOfWeek = date.getDay();
+  const currentHour = date.getHours();
+  return `day = "${dayOfWeek}" && startHour >= ${
+    currentHour - hourOffset
+  } && startHour <= ${currentHour + hourOffset}`;
+}
+
 export function useAttendanceMutation() {
   return useMutation({
-    mutationFn: async ({code, classId, userId}: {code: string, classId: string, userId: string}) => {
-      const validCode = await pb.collection(collections.checkin_codes).getOne(code);
+    mutationFn: async ({
+      code,
+      classId,
+      userId,
+    }: {
+      code: string;
+      classId: string;
+      userId: string;
+    }) => {
+      const validCode = await pb
+        .collection(collections.checkin_codes)
+        .getOne(code);
       if (!validCode || !classId || !userId) {
-        return new Error(`Mutation Error: ${JSON.stringify({code, classId, userId})}`);
+        return new Error(
+          `Mutation Error: ${JSON.stringify({ code, classId, userId })}`
+        );
       } else {
         const response = await pb.collection(collections.attendances).create({
           user: userId,
           class: classId,
-          code
+          code,
         });
         return response;
+      }
+    },
+  });
+}
+
+export interface CheckinCount {
+  id: string;
+  name: Class['name'];
+  year_month: string;
+  count: number;
+}
+
+
+
+export function useCheckinCount() {
+  return useQuery({
+    queryKey: [queryKeys.CHECKIN_COUNT],
+    queryFn: async () => {
+      try {
+        const records = await pb
+          .collection<CheckinCount>(collections.checkin_count)
+          .getList(1, 100, {
+            expand: 'class'
+          });
+        return [
+          {
+            label: 'Classes',
+            data: records.items.map(item => ({
+              id: item.id,
+              name: item.expand?.class.name,
+              count: item.totalCount,
+              year_month: item.year_month
+            }))
+          }
+        ];
+      } catch (error) {
+        console.error(error);
+        return []
       }
     },
   });

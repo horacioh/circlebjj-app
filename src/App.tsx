@@ -22,6 +22,7 @@ import { client, pb } from "./pocketbase";
 function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
+  const [isCoach, setIsCoach] = useState(false);
   const [ready, setReady] = useState(false);
 
   useEffect(() => {
@@ -32,10 +33,11 @@ function App() {
       setIsAdmin(
         pb.authStore.isAdmin || pb.authStore.model?.role.includes("admin")
       );
+      setIsCoach(
+        pb.authStore.model?.role.includes("coach")
+      );
       setReady(true);
     };
-
-    console.log(`== ~ checkAuth ~ pb.authStore.model:`, pb.authStore.model);
 
     checkAuth();
     pb.authStore.onChange(checkAuth);
@@ -49,7 +51,7 @@ function App() {
   return ready ? (
     <QueryClientProvider client={client}>
       <Router>
-        <MainNav isLoggedIn={isLoggedIn} isAdmin={isAdmin} />
+        <MainNav isLoggedIn={isLoggedIn} isAdmin={isAdmin} isCoach={isCoach} />
         <div className="container-lg mx-auto p-4">
           <Routes>
             <Route

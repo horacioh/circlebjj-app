@@ -16,4 +16,6 @@ export const collections = {
     attendances: 'attendances',
     classes: 'classes',
     checkin_codes: 'checkin_codes',
+    checkin_count: 'checkin_count',
+    attendance_count: 'attendance_count',
 }

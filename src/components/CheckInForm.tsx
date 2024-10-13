@@ -9,7 +9,6 @@ const CheckInForm: React.FC = () => {
   const classes = useClasses();
   const [selectedClass, setSelectedClass] = useState("");
 
-  console.log(`== ~ selectedClass:`, selectedClass)
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");

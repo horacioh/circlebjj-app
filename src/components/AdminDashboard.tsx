@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { collections, pb } from "../pocketbase";
 import { queryKeys } from "../querykeys";
 import { RecordModel } from "pocketbase";
+import {DailyChart} from "./daily-chart";
 
 const AdminDashboard: React.FC = () => {
   const navigate = useNavigate();
@@ -74,6 +75,7 @@ const AdminDashboard: React.FC = () => {
           <p className="text-3xl font-bold">{stats?.newUsersThisMonth || 0}</p>
         </div>
       </div>
+      <DailyChart />
 
       {/* Recent Attendances */}
       <div className="bg-white p-4 rounded-lg shadow">
