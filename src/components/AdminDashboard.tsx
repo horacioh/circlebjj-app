@@ -1,10 +1,10 @@
-import { useQuery } from "@tanstack/react-query";
 import React from "react";
+import { useQuery } from "@tanstack/react-query";
+import { RecordModel } from "pocketbase";
 import { useNavigate } from "react-router-dom";
 import { collections, pb } from "../pocketbase";
 import { queryKeys } from "../querykeys";
-import { RecordModel } from "pocketbase";
-import {DailyChart} from "./daily-chart";
+import { DailyChart } from "./daily-chart";
 
 const AdminDashboard: React.FC = () => {
   const navigate = useNavigate();
@@ -59,7 +59,6 @@ const AdminDashboard: React.FC = () => {
   return (
     <div className="space-y-6 max-w-4xl mx-auto mt-8">
       <h2 className="text-2xl font-bold mb-4">Admin Dashboard</h2>
-
       {/* Summary Statistics */}
       <div className="flex flex-col md:flex-row md:space-x-4 space-y-4 md:space-y-0">
         <div className="bg-blue-100 p-4 rounded-lg flex-1">
@@ -75,7 +74,7 @@ const AdminDashboard: React.FC = () => {
           <p className="text-3xl font-bold">{stats?.newUsersThisMonth || 0}</p>
         </div>
       </div>
-      <DailyChart />
+      {/* <DailyChart /> */}
 
       {/* Recent Attendances */}
       <div className="bg-white p-4 rounded-lg shadow">
