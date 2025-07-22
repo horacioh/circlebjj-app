@@ -11,6 +11,19 @@ const AttendancesList: React.FC = () => {
     return <div>Loading...</div>;
   }
 
+  const filteredAttendances = attendances.filter((attendance) => {
+    if (!searchTerm) return true;
+    
+    const user = attendance.expand?.user;
+    if (!user) return false;
+    
+    return (
+      user.first_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      user.last_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      user.email?.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+  });
+
   return (
     <div className="container mx-auto p-4">
       <h2 className="text-2xl font-bold mb-4">Attendances List</h2>
@@ -24,7 +37,7 @@ const AttendancesList: React.FC = () => {
         />
       </div>
       <div className="grid grid-cols-1 gap-4 lg:gap-1">
-        {attendances.map((attendance) => (
+        {filteredAttendances.map((attendance) => (
           <AttendanceItem key={attendance.id} attendance={attendance} />
         ))}
       </div>
