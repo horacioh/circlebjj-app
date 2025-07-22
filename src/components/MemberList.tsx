@@ -13,9 +13,9 @@ const MemberList: React.FC = () => {
 
   const filteredMembers = users.filter(
     (member) =>
-      member.first_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      member.last_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      member.email.toLowerCase().includes(searchTerm.toLowerCase())
+      member.first_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      member.last_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      member.email?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   return (
