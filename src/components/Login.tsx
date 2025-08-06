@@ -26,7 +26,7 @@ const Login: React.FC = () => {
   return (
     <div className="max-w-md mx-auto mt-8">
       <h2 className="text-2xl font-bold mb-4">Login</h2>
-      {error && <p className="text-red-500 mb-4">{error}</p>}
+      {error && <p id="error-message" className="text-red-500 mb-4">{error}</p>}
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
           <label htmlFor="email" className="block mb-1">

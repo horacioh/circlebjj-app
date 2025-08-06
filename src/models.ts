@@ -124,6 +124,53 @@ export function useAttendanceMutation() {
   });
 }
 
+export function useCreateAttendanceMutation() {
+  return useMutation({
+    mutationFn: async ({
+      userId,
+      classId,
+    }: {
+      userId: string;
+      classId: string;
+    }) => {
+      const response = await pb.collection(collections.attendances).create({
+        user: userId,
+        class: classId,
+      });
+      return response;
+    },
+  });
+}
+
+export function useUpdateAttendanceMutation() {
+  return useMutation({
+    mutationFn: async ({
+      id,
+      userId,
+      classId,
+    }: {
+      id: string;
+      userId: string;
+      classId: string;
+    }) => {
+      const response = await pb.collection(collections.attendances).update(id, {
+        user: userId,
+        class: classId,
+      });
+      return response;
+    },
+  });
+}
+
+export function useDeleteAttendanceMutation() {
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const response = await pb.collection(collections.attendances).delete(id);
+      return response;
+    },
+  });
+}
+
 export interface CheckinCount {
   id: string;
   name: Class['name'];

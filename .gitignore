@@ -26,3 +26,9 @@ dist-ssr
 .yarn
 .pnp.cjs
 .pnp.loader.mjs
+
+# Playwright
+/test-results/
+/playwright-report/
+/blob-report/
+/playwright/.cache/
