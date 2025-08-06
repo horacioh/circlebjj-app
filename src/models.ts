@@ -176,6 +176,10 @@ export interface CheckinCount {
   name: Class['name'];
   year_month: string;
   count: number;
+  totalCount: number;
+  expand?: {
+    class: Class;
+  };
 }
 
 
@@ -195,9 +199,11 @@ export function useCheckinCount() {
             label: 'Classes',
             data: records.items.map(item => ({
               id: item.id,
-              name: item.expand?.class.name,
+              name: item.expand?.class.name || '',
               count: item.totalCount,
-              year_month: item.year_month
+              totalCount: item.totalCount,
+              year_month: item.year_month,
+              expand: item.expand
             }))
           }
         ];

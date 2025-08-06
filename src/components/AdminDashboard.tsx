@@ -5,7 +5,6 @@ import { useNavigate } from "react-router-dom";
 import { Plus } from "lucide-react";
 import { collections, pb } from "../pocketbase";
 import { queryKeys } from "../querykeys";
-import { DailyChart } from "./daily-chart";
 import { Button } from "./ui/button";
 import { AttendanceDialog } from "./AttendanceDialog";
 
